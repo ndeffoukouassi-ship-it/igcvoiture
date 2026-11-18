@@ -1,0 +1,1 @@
+{"name":"igc-autowash","private":true,"version":"0.2.0","scripts":{"build":"node scripts/build.mjs","test":"node --test tests/*.test.cjs"},"dependencies":{"@supabase/supabase-js":"2.119.1"},"devDependencies":{"esbuild":"0.25.12"},"engines":{"node":">=22"}}

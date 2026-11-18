@@ -1,3 +1,40 @@
-# IGC AutoWash
+# IGC AutoWash — version en ligne
 
-Application de gestion de centres de lavage automobile, portée par IGC.
+Application web de gestion de lavages automobiles, en français, portée par Impact Global Consulting.
+
+## Architecture
+
+- Site statique Render ; Supabase Auth, Postgres et Storage.
+- Un compte propriétaire par centre, données isolées par `auth.uid()` et RLS.
+- Tickets, fidélité facultative, bilans et dépenses. Reçus dans un bucket privé.
+- Sauvegardes de l’état avec révision pour refuser les écrasements concurrents ; actualisation manuelle entre appareils.
+- Les photos sont récupérées avec le jeton du propriétaire ; aucune URL publique de reçu.
+
+## Construire
+
+Node 22 ou plus. `npm ci`, puis `npm test`, puis `npm run build`.
+Variables obligatoires : `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (clé publique uniquement).
+Le résultat est dans `build/`. Aucun secret `service_role` n’est requis pour l’application.
+
+## Supabase
+
+Projet dédié : IGC AutoWash (`wofsqsnvpenkpzzyebsn`), région Paris.
+Schéma déjà appliqué : `database/schema.sql`. Ne pas le réappliquer sans migration adaptée.
+Test d’isolation : `database/security-test.sql` (transaction avec rollback).
+Configurer l’URL du site Auth et les URL de redirection pour le domaine Render final, y compris `/?recovery=1`.
+La confirmation d’adresse e-mail doit rester activée. Prévoir un fournisseur SMTP de production avant ouverture à de nombreux clients.
+
+## Render
+
+Publier le dépôt sur GitHub puis créer un site statique :
+- Build : `cd cloud && npm ci && npm test && npm run build` si le dépôt contient le dossier cloud ; sinon `npm ci && npm test && npm run build`.
+- Publication : `cloud/build` ou `build` selon la racine du dépôt.
+- Les deux variables ci-dessus doivent être renseignées dans Render.
+
+## Limites de cette première version cloud
+
+- Pas encore de rôles employés, d’administration des abonnements, ni de synchronisation temps réel.
+- L’état de chaque centre est un document versionné ; à découper en tables de transactions pour les gros volumes.
+- Les suppressions de comptes et le nettoyage des reçus remplacés nécessitent une procédure administrateur.
+- Les sauvegardes JSON et CSV restent disponibles. Les données du pilote local ne sont pas transférées automatiquement : conserver un export du navigateur d’origine avant migration.
+- Scanner OCR à vérifier sur des plaques réelles. Les paiements restent des enregistrements manuels.
