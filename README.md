@@ -48,3 +48,11 @@ La route `/#fidelite=...` ne demande pas de connexion et affiche uniquement le n
 La fonction de lecture privilégiée est dans un schéma non exposé et contrôle le jeton avant toute lecture. Les politiques n’accordent pas d’accès anonyme aux tables privées. Tests : `database/customer-loyalty-test.sql`.
 
 Le gérant utilise actuellement le compte du centre ; les comptes employés distincts et l’administration IGC restent à développer.
+
+## Comptes gérants et Android
+
+Les propriétaires peuvent inviter des gérants depuis « Mon centre ». L’invitation est à usage unique, valable 7 jours. Les gérants ont des identifiants séparés et peuvent gérer les tickets, les encaissements manuels, les dépenses et les liens de fidélité. Le nom, les tarifs, l’activation de la fidélité et la gestion des accès restent réservés au propriétaire. Les restrictions sont vérifiées par les fonctions SQL côté serveur, pas seulement par l’interface. Le propriétaire peut retirer un accès.
+
+Migrations : `database/managers.sql`. Tests de sécurité avec rollback : `database/managers-test.sql`.
+
+Le projet Android se trouve dans `android/` à la racine du dépôt, avec caméra native et confirmation de la plaque. Il s’agit d’une première version de test connectée ; notifications push et saisie différée hors connexion ne sont pas encore incluses.
