@@ -1,0 +1,2 @@
+const {strict:a}=require('node:assert');const {plateCandidates:f}=require('../public/plate-ocr.js');
+a.equal(f('AB 123 CD')[0].plate,'AB123CD');a.equal(f('1234 AB 01')[0].plate,'1234AB01');a.equal(f("CÔTE D’IVOIRE\nAB 123 CD")[0].plate,'AB123CD');a.equal(f('CAR WASH\n2026\nAB-123-CD')[0].plate,'AB123CD');a.equal(f('COTE DIVOIRE').length,0);a.equal(f('123456').length,0);a.equal(f('AB O12 CD')[0].plate,'ABO12CD');
