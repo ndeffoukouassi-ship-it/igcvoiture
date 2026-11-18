@@ -3,13 +3,14 @@
  const config=window.AUTOWASH_CONFIG;
  const gate=document.getElementById('authGate');
  if(!config){gate.textContent='Configuration du service indisponible.';return}
+ if(location.hash.startsWith('#fidelite=')){openCustomerLoyalty(config);return}
  const client=createSupabaseClient(config.url,config.key);
  let owner,revision=0,loaded=false,busy=false,formMode='login';
- const photoPaths=new Map();
+ const photoPaths=new Map();const registeredCustomerTokens=new Set();
  const message=s=>{document.getElementById('authMessage').textContent=s};
  function show(mode='login'){
  formMode=mode;gate.hidden=false;document.getElementById('appShell').hidden=true;
- document.getElementById('authTitle').textContent=mode==='signup'?'Créer le compte de votre lavage':mode==='recovery'?'Choisir un nouveau mot de passe':'Bienvenue sur AutoWash';
+ document.getElementById('authTitle').textContent=mode==='signup'?'Créer le compte de votre lavage':mode==='recovery'?'Choisir un nouveau mot de passe':'Espace propriétaire / gérant';
  document.getElementById('authSubmit').textContent=mode==='signup'?'Créer mon compte':mode==='recovery'?'Enregistrer le mot de passe':'Se connecter';
  document.getElementById('authEmailLabel').hidden=mode==='recovery';document.getElementById('authEmail').required=mode!=='recovery';
  const pass=document.getElementById('authPassword');pass.autocomplete=mode==='login'?'current-password':'new-password';pass.minLength=mode==='login'?1:10;pass.type='password';document.getElementById('togglePassword').textContent='Voir le mot de passe';document.getElementById('togglePassword').setAttribute('aria-pressed','false');
@@ -25,10 +26,10 @@
  for(const expense of data.state.expenses||[]){if(expense.receiptPhotoPath){const file=await client.storage.from('autowash-receipts').download(expense.receiptPhotoPath);if(file.error)throw Error('Impossible de charger un reçu. Réessayez avant de modifier les données.');expense.receiptPhoto=await blobToDataURL(file.data);photoPaths.set(expense.receiptPhoto,expense.receiptPhotoPath)}}
  window.Cloud.state=data.state;loaded=true;
  document.getElementById('cloudUser').textContent=userData.user.email;
- const script=document.createElement('script');script.src='app.js';script.onload=()=>{gate.hidden=true;document.getElementById('appShell').hidden=false};script.onerror=()=>message('Chargement impossible. Actualisez la page.');document.body.append(script);
+ const script=document.createElement('script');script.src='app.js?v='+config.appVersion;script.onload=()=>{gate.hidden=true;document.getElementById('appShell').hidden=false};script.onerror=()=>message('Chargement impossible. Actualisez la page.');document.body.append(script);
  }
  function blobToDataURL(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Photo illisible'));reader.readAsDataURL(blob)})}
- window.Cloud={state:null,save:async state=>{
+ window.Cloud={state:null,customerLinkReady:token=>registeredCustomerTokens.has(token),registerCustomerLink:async(plate,token)=>{if(registeredCustomerTokens.has(token))return;if(!owner||!loaded)throw Error('Connexion requise');const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))),b=>b.toString(16).padStart(2,'0')).join('');const {error}=await client.from('autowash_loyalty_links').upsert({owner_id:owner,plate,token_hash:hash},{onConflict:'token_hash'});if(error)throw error;registeredCustomerTokens.add(token);},save:async state=>{
  if(!owner||!loaded)throw Error('Connectez-vous avant d’enregistrer.');if(busy)throw Error('Un enregistrement est déjà en cours. Réessayez dans un instant.');
  busy=true;document.getElementById('cloudSaving').hidden=false;document.getElementById('cloudStatus').textContent='Enregistrement…';
  try{

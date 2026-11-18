@@ -38,3 +38,13 @@ Publier le dépôt sur GitHub puis créer un site statique :
 - Les suppressions de comptes et le nettoyage des reçus remplacés nécessitent une procédure administrateur.
 - Les sauvegardes JSON et CSV restent disponibles. Les données du pilote local ne sont pas transférées automatiquement : conserver un export du navigateur d’origine avant migration.
 - Scanner OCR à vérifier sur des plaques réelles. Les paiements restent des enregistrements manuels.
+
+## Espace automobiliste
+
+Depuis un ticket, le propriétaire du centre peut créer un lien de suivi fidélité. Le lien est une capacité de 256 bits ; son empreinte est enregistrée dans une table protégée et le lien lui-même reste dans l’état privé du centre pour permettre de le partager de nouveau.
+
+La route `/#fidelite=...` ne demande pas de connexion et affiche uniquement le nom du centre, la plaque, le compteur et les 50 derniers lavages validés. Le lien est confidentiel ; toute personne qui le possède peut le consulter. Il n’existe pas de recherche publique par plaque.
+
+La fonction de lecture privilégiée est dans un schéma non exposé et contrôle le jeton avant toute lecture. Les politiques n’accordent pas d’accès anonyme aux tables privées. Tests : `database/customer-loyalty-test.sql`.
+
+Le gérant utilise actuellement le compte du centre ; les comptes employés distincts et l’administration IGC restent à développer.
