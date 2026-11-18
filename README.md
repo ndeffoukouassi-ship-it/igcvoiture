@@ -56,3 +56,11 @@ Les propriétaires peuvent inviter des gérants depuis « Mon centre ». L’inv
 Migrations : `database/managers.sql`. Tests de sécurité avec rollback : `database/managers-test.sql`.
 
 Le projet Android se trouve dans `android/` à la racine du dépôt, avec caméra native et confirmation de la plaque. Il s’agit d’une première version de test connectée ; notifications push et saisie différée hors connexion ne sont pas encore incluses.
+
+## Administration IGC
+
+L’administrateur désigné se connecte avec son compte AutoWash habituel ; son droit est conservé dans une table privée du serveur et n’est pas déduit des métadonnées modifiables du compte. L’écran Administration IGC liste les centres, les contacts propriétaires, le nombre de tickets et gérants, et un suivi manuel des licences (essai, actif, suspendu, échéance, mensualité prévue et notes).
+
+Aucun paiement automatique n’est exécuté. Une suspension ou une échéance passée bloque les accès du centre et ses gérants, y compris les anciennes voies de lecture/écriture et les reçus. Les changements de licence sont journalisés. L’administrateur conserve l’accès à son propre espace pour éviter de se bloquer lui-même. L’administration ne propose pas de consultation des photos ou des dépenses des autres centres.
+
+Migrations : `database/platform-admin.sql`, puis `database/admin-access-guards.sql`. Tests : `database/platform-admin-test.sql` (transaction avec rollback).
