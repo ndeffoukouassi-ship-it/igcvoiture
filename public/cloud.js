@@ -12,7 +12,7 @@
  document.getElementById('authTitle').textContent=mode==='signup'?'Créer le compte de votre lavage':mode==='recovery'?'Choisir un nouveau mot de passe':'Bienvenue sur AutoWash';
  document.getElementById('authSubmit').textContent=mode==='signup'?'Créer mon compte':mode==='recovery'?'Enregistrer le mot de passe':'Se connecter';
  document.getElementById('authEmailLabel').hidden=mode==='recovery';document.getElementById('authEmail').required=mode!=='recovery';
- const pass=document.getElementById('authPassword');pass.autocomplete=mode==='login'?'current-password':'new-password';pass.minLength=mode==='login'?1:10;
+ const pass=document.getElementById('authPassword');pass.autocomplete=mode==='login'?'current-password':'new-password';pass.minLength=mode==='login'?1:10;pass.type='password';document.getElementById('togglePassword').textContent='Voir le mot de passe';document.getElementById('togglePassword').setAttribute('aria-pressed','false');
  document.getElementById('authToggle').hidden=mode==='recovery';
  document.getElementById('authToggle').textContent=mode==='signup'?'J’ai déjà un compte':'Créer un compte de lavage';
  }
@@ -38,6 +38,7 @@
  }catch(error){document.getElementById('cloudStatus').textContent='Échec de l’enregistrement';throw error}
  finally{busy=false;document.getElementById('cloudSaving').hidden=true}
  }};
+ document.getElementById('togglePassword').onclick=()=>{const input=document.getElementById('authPassword'),button=document.getElementById('togglePassword');const visible=input.type==='password';input.type=visible?'text':'password';button.textContent=visible?'Masquer le mot de passe':'Voir le mot de passe';button.setAttribute('aria-pressed',String(visible))};
  document.getElementById('authToggle').onclick=()=>{show(formMode==='signup'?'login':'signup');message('')};
  document.getElementById('authForm').onsubmit=async event=>{
  event.preventDefault();const button=document.getElementById('authSubmit');button.disabled=true;message('Connexion en cours…');
