@@ -2,7 +2,7 @@ const {test}=require('node:test');const a=require('node:assert/strict');const vm
 function fixture(recognize){
  let inputEvents=0;const elements={plate:{value:'',dispatchEvent(){inputEvents++},scrollIntoView(){}},ocr:{textContent:''},photo:{disabled:false,value:'file'},preview:{hidden:true},submit:{disabled:false}};elements.ticketForm={querySelector:()=>elements.submit};
  const worker={setParameters:async()=>{},recognize,terminate:async()=>{}};const tesseract={createWorker:async()=>worker};
- const document={getElementById:id=>elements[id],createElement:tag=>({width:0,height:0,getContext:()=>({fillRect(){},drawImage(){}})})};
+ const document={getElementById:id=>elements[id],createElement:tag=>({width:0,height:0,getContext:()=>({fillRect(){},drawImage(){},getImageData(x,y,width,height){return {width,height,data:new Uint8ClampedArray(width*height*4)}}})})};
  const context=vm.createContext({document,window:{Tesseract:tesseract},Tesseract:tesseract,URL:{createObjectURL:()=>'/photo',revokeObjectURL(){}},createImageBitmap:async()=>({width:1000,height:280,close(){}}),setTimeout,clearTimeout,Event,location:{origin:'https://test.invalid'}});
  vm.runInContext(fs.readFileSync('public/plate-ocr.js','utf8'),context);
  return {elements,events:()=>inputEvents,scan:()=>vm.runInContext('PlateScanner.scan({size:1000})',context),cancel:()=>vm.runInContext('PlateScanner.cancel()',context)};
