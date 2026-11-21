@@ -56,7 +56,7 @@ public class MainActivity extends ComponentActivity {
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){
    if(!trusted()){if(web.canGoBack())web.goBack();else finish();return;}
    // Les onglets web ne créent pas d'entrée dans l'historique WebView : retour au tableau de bord d'abord.
-   String navigate="(()=>{const dialogs=document.querySelectorAll('dialog[open]');if(dialogs.length){const d=dialogs[dialogs.length-1];d.dispatchEvent(new Event('cancel'));d.close();return true;}const current=document.querySelector('nav button.active');const home=document.querySelector('nav button[data-view=\\\"dashboard\\\"]');if(current&&current.dataset.view!=='dashboard'&&home){home.click();return true;}return false;})()";
+   String navigate="(()=>{const dialogs=document.querySelectorAll('dialog[open]');if(dialogs.length){const d=dialogs[dialogs.length-1];d.dispatchEvent(new Event('cancel'));d.close();return true;}const current=document.querySelector('nav button.active');const home=document.querySelector('nav button[data-view=dashboard]');if(current&&current.dataset.view!=='dashboard'&&home){home.click();return true;}return false;})()";
    web.evaluateJavascript(navigate,handled->{if("true".equals(handled))return;if(web.canGoBack())web.goBack();else finish();});
   }});
   if(state!=null)web.restoreState(state);else web.loadUrl(ORIGIN+"/?android=1");
