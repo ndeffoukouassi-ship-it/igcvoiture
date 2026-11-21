@@ -53,7 +53,12 @@ public class MainActivity extends ComponentActivity {
   web.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){if(!trusted())return false;if(chooser!=null)chooser.onReceiveValue(null);chooser=callback;if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED)openPicker(true);else cameraPermission.launch(Manifest.permission.CAMERA);return true;}});
   web.setDownloadListener((url,agent,disposition,mime,length)->{if(!trusted())return;if(url.startsWith("blob:"+ORIGIN)){web.evaluateJavascript("fetch("+JSONObject.quote(url)+").then(r=>r.blob()).then(b=>{if(b.size>15000000)throw Error();const r=new FileReader();r.onload=()=>AutoWashNative.postMessage(JSON.stringify({action:'download',data:r.result,mime:b.type}));r.readAsDataURL(b)})",null);}else toast("Utilisez le partage du reçu ou ouvrez le site dans Chrome pour ce fichier.");});
   refresh.setOnClickListener(v->web.loadUrl(ORIGIN+"/?android=1"));
-  getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){if(web.canGoBack())web.goBack();else finish();}});
+  getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){
+   if(!trusted()){if(web.canGoBack())web.goBack();else finish();return;}
+   // Les onglets web ne créent pas d'entrée dans l'historique WebView : retour au tableau de bord d'abord.
+   String navigate="(()=>{const dialogs=document.querySelectorAll('dialog[open]');if(dialogs.length){const d=dialogs[dialogs.length-1];d.dispatchEvent(new Event('cancel'));d.close();return true;}const current=document.querySelector('nav button.active');const home=document.querySelector('nav button[data-view=dashboard]');if(current&&current.dataset.view!=='dashboard'&&home){home.click();return true;}return false;})()";
+   web.evaluateJavascript(navigate,handled->{if("true".equals(handled))return;if(web.canGoBack())web.goBack();else finish();});
+  }});
   if(state!=null)web.restoreState(state);else web.loadUrl(ORIGIN+"/?android=1");
  }
  void handleMessage(String raw){try{if(raw==null||raw.length()>21000000)return;JSONObject message=new JSONObject(raw);String action=message.optString("action");
