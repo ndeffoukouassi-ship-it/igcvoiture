@@ -23,3 +23,13 @@ test('Aucun encaissement automatique déclaré',()=>{
  assert.match(gestion,/sans prélèvement automatique/);
  assert.match(admin,/Aucun paiement n’est prélevé automatiquement/);
 });
+
+
+test('Administration : total tarif standard séparé des montants saisis',()=>{
+ const admin=source('public/admin.js');
+ assert.match(admin,/Tarif mensuel standard/);
+ assert.match(admin,/Mensualités actuellement enregistrées/);
+ assert.match(admin,/Non renseigné/);
+ assert.match(admin,/À vérifier/);
+ assert.match(admin,/Ce total est une projection au tarif standard, pas une somme encaissée/);
+});
