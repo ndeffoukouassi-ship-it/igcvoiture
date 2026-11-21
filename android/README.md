@@ -18,7 +18,7 @@ JDK 17+, Android SDK 35, Build Tools 35.0.0 et Gradle 8.11.1.
 
 Sortie : `app/build/outputs/apk/debug/app-debug.apk`.
 
-Cet APK est signé avec une clé de débogage, sous l’identifiant `ci.igc.autowash.test`. Il est destiné à des essais, pas à la publication sur Play Store. La signature de production et sa conservation devront être configurées avant commercialisation. Des APK de test compilés sur des machines différentes peuvent nécessiter de désinstaller l’ancienne version, ce qui efface la session locale ; les données sauvegardées dans Supabase ne sont pas effacées.
+Cet APK 0.2 de test utilise désormais l'identifiant distinct `ci.igc.autowash.test2` pour s'installer **à côté** de la version 0.1 `ci.igc.autowash.test`. Les sessions et données locales ne sont pas transférées entre les deux applications ; se reconnecter avec son compte AutoWash pour accéder aux données sauvegardées sur Supabase. Conserver l'ancienne application tant que le fonctionnement de la nouvelle n'est pas validé. Cette compilation utilise une clé de débogage et n'est pas destinée à Play Store ; une signature de production pérenne sera nécessaire pour les mises à jour futures.
 
 ## Navigation et actualisation (0.2.0-test)
 
