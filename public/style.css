@@ -32,3 +32,16 @@ nav button[data-view="reports"]{--button-top:#308daf;--button-bottom:#17607e;--b
 #inviteManager,#copyManagerInvite{--button-top:#a16ccc;--button-bottom:#704293;--button-edge:#4a2964;margin:8px 10px 8px 0}#showManagers{--button-top:#398fe2;--button-bottom:#1a5ca6;--button-edge:#103d76}#managerInviteValue{font-size:14px}#closeManagerInvite{margin-left:10px}
 
 nav button[data-view="admin"]{--button-top:#b88f34;--button-bottom:#80611f;--button-edge:#513b12}#refreshAdmin{--button-top:#3289b3;--button-bottom:#1e5f80;--button-edge:#103f57}#adminRoot .hint{margin-top:12px}textarea{display:block;width:100%;margin-top:8px;padding:12px;font:inherit;border:1px solid #d5e1d9;border-radius:8px;background:#fff;color:#183e30}#registrationUrl{font-size:14px}#closeOnboarding{margin-left:10px}
+
+/* AutoWash Android 0.2 : voiture plus visible et barre de navigation mobile persistante. */
+@media (max-width:700px) {
+  body { background:linear-gradient(90deg,rgba(5,37,28,.42),rgba(5,37,28,.08)),url('car-background.jpg') 62% top/cover no-repeat; }
+  .auth-gate { background:linear-gradient(90deg,rgba(7,60,46,.65),rgba(7,60,46,.18)),url('car-background.jpg') center/cover no-repeat; }
+  .hero { background:linear-gradient(90deg,rgba(4,41,29,.78) 0%,rgba(4,41,29,.26) 60%,rgba(4,41,29,.06) 100%),url('car-background.jpg') 68% center/cover no-repeat; }
+  aside { position:fixed;top:auto;bottom:0;left:0;right:0;width:100%;padding:9px 10px calc(12px + env(safe-area-inset-bottom));z-index:70;background:rgba(4,43,31,.98);border-top:2px solid #d4ad42;box-shadow:0 -5px 22px #0005; }
+  aside>.brand { display:none; }
+  aside nav { display:flex;gap:10px;margin:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scroll-snap-type:x proximity;padding:2px 2px 8px; }
+  aside nav button { flex:0 0 auto;min-width:104px;font-size:12px;padding:11px 9px;line-height:1.35;white-space:normal;scroll-snap-align:start;text-align:center; }
+  main { padding-bottom:calc(116px + env(safe-area-inset-bottom)); }
+  footer { padding-bottom:16px; }
+}
