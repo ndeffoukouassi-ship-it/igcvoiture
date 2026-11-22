@@ -37,7 +37,7 @@ function choosePlateResult(results){
 const PlateScanner=(()=>{
  let worker,initializing,run=0,previewUrl;
  const status=s=>document.getElementById('ocr').textContent=s;
- function cancel(){run++;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}document.getElementById('ticketForm').querySelector('[type="submit"]').disabled=false;document.getElementById('photo').disabled=false;}
+ function cancel(){document.getElementById('confirmUncertainPlate')?.remove();run++;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}document.getElementById('ticketForm').querySelector('[type="submit"]').disabled=false;document.getElementById('photo').disabled=false;}
  async function library(){if(window.Tesseract)return;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='ocr/tesseract.min.js?v=5.1.1';s.onload=resolve;s.onerror=()=>reject(Error('Le lecteur ne se charge pas. Vérifiez votre connexion Internet.'));document.head.append(s)})}
  async function getWorker(job){
  if(worker)return worker;
@@ -81,7 +81,7 @@ const PlateScanner=(()=>{
  })(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Lecture trop longue. Réessayez avec une photo cadrée de près sur la plaque.')),60000)})]);
  if(job!==run)return;
  if(outcome?.reliable){if(field.value===previousValue){field.value=outcome.plate;field.dispatchEvent(new Event('input',{bubbles:true}));status('Plaque remplie automatiquement : '+outcome.plate+'. Vérifiez les lettres et les chiffres avant de valider.');field.scrollIntoView({block:'nearest',behavior:'smooth'})}else status('Lecture terminée. Votre saisie manuelle a été conservée.')}
- else if(outcome){status('Lecture incertaine : '+outcome.plate+'. Le champ n’a pas été rempli pour éviter une erreur. Reprenez la photo de plus près ou saisissez la plaque exacte.')}else status('Aucun numéro suffisamment lisible. Reprenez une photo de près, avec la plaque entière et sans reflet. Vous pouvez aussi saisir le numéro.');
+ else if(outcome){const confirmButton=document.createElement('button');confirmButton.type='button';confirmButton.id='confirmUncertainPlate';confirmButton.className='secondary';confirmButton.textContent='Confirmer ce numéro : '+outcome.plate;confirmButton.onclick=()=>{if(job!==run)return;field.value=outcome.plate;field.dispatchEvent(new Event('input',{bubbles:true}));status('Numéro confirmé. Vérifiez avant de créer le ticket.');confirmButton.remove()};document.getElementById('ocr').after(confirmButton);status('Lecture incertaine : '+outcome.plate+'. Le champ n’a pas été rempli pour éviter une erreur. Reprenez la photo de plus près ou saisissez la plaque exacte.')}else status('Aucun numéro suffisamment lisible. Reprenez une photo de près, avec la plaque entière et sans reflet. Vous pouvez aussi saisir le numéro.');
  }catch(error){if(job===run){status(error.message||'Lecture impossible. Reprenez une photo ou saisissez la plaque.');if(worker)worker.terminate().catch(()=>{});worker=null;initializing=null}}
  finally{clearTimeout(timer);if(bitmap)bitmap.close();if(job===run){submit.disabled=false;document.getElementById('photo').disabled=false;document.getElementById('photo').value=''}}
  }
