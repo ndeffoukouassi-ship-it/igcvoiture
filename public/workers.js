@@ -1,12 +1,36 @@
 function workerTotals(tickets,id){const rows=tickets.filter(t=>t.workerId===id);const earned=rows.filter(t=>t.status==='Terminé');return {count:earned.length,due:earned.filter(t=>!t.workerPaidAt).reduce((s,t)=>s+(t.workerFee||0),0),paid:earned.filter(t=>t.workerPaidAt).reduce((s,t)=>s+(t.workerFee||0),0)}}
-function workerOptions(){return '<option value="">Non attribué</option>'+(db.workers||[]).filter(w=>w.active).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}
+function workerPickerHtml(id,selected=''){
+ const workers=(db.workers||[]).filter(w=>w.active);
+ const choice=(value,label)=>`<label class="worker-choice"><input type="radio" name="${id}Choice" value="${esc(value)}" ${value===selected?'checked':''}><span>${label}</span></label>`;
+ return `<fieldset id="${id}Picker" class="worker-picker"><legend>Laveur (un par voiture)</legend><input type="hidden" id="${id}" value="${esc(selected)}">${choice('','Non attribué')}${workers.map(w=>choice(w.id,`${esc(w.name)} · ${money(w.rate)} F / voiture`)).join('')}${workers.length?'':`<p class="hint">Aucun laveur actif. ${Cloud.role==='manager'?'Demandez au propriétaire d’ajouter ou de réactiver un laveur dans « Laveurs et paiements ».':'Ajoutez ou réactivez un laveur dans « Laveurs et paiements », puis revenez au ticket.'}</p>`}<button type="button" data-manage-workers>Gérer les laveurs</button></fieldset>`;
+}
+function bindWorkerPicker(id){
+ const picker=$('#'+id+'Picker');
+ picker.querySelectorAll('input[type="radio"]').forEach(input=>input.onchange=()=>{$('#'+id).value=input.value});
+ picker.querySelector('[data-manage-workers]').onclick=()=>{
+  picker.closest('dialog')?.close();view='workers';render();
+ };
+}
 function workersHtml(){return header('Laveurs et rémunérations','Un laveur par voiture. Le montant fixé lors de l’attribution est conservé.',false)+`<p class="hint">La rémunération devient due lorsque le lavage est terminé, y compris pour un lavage offert. Les anciens tickets sans tarif restent à attribuer. Les paiements sont enregistrés après règlement effectif.</p>${Cloud.role!=='manager'?'<form id="workerForm" class="panel"><h3>Ajouter un laveur</h3><label>Nom<input id="workerName" required maxlength="50"></label><label>Montant par voiture (F CFA)<input id="workerRate" type="number" min="0" max="1000000" step="1" required></label><button class="primary">Ajouter le laveur</button></form>':''}<div class="panel table-wrap"><table><thead><tr><th>Laveur</th><th>Tarif / voiture</th><th>Terminées</th><th>Dû</th><th>Payé</th><th>Actions</th></tr></thead><tbody>${(db.workers||[]).map(w=>{const s=workerTotals(db.tickets,w.id);return `<tr><td>${esc(w.name)}${w.active?'':' (inactif)'}</td><td>${money(w.rate)} F</td><td>${s.count}</td><td>${money(s.due)} F</td><td>${money(s.paid)} F</td><td>${Cloud.role!=='manager'?`<button data-worker-rate="${w.id}">Modifier le tarif</button><button data-worker-active="${w.id}">${w.active?'Désactiver':'Réactiver'}</button>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="panel table-wrap"><h3>Voitures et paiements</h3><table><thead><tr><th>Plaque</th><th>Laveur</th><th>Statut</th><th>Rémunération</th><th>Règlement</th></tr></thead><tbody>${db.tickets.slice().reverse().map(t=>`<tr><td>${esc(t.plate)}</td><td>${esc(t.worker||'Non attribué')}</td><td>${esc(t.status)}</td><td>${t.workerFee==null?'À définir':money(t.workerFee)+' F'}</td><td>${t.workerPaidAt?'Payé le '+date(t.workerPaidAt):t.workerId&&t.status==='Terminé'&&t.workerFee>0?`<button data-worker-pay="${t.id}">Enregistrer le paiement</button>`:t.workerFee===0?'Sans rémunération':''}${!t.workerPaidAt?` <button data-worker-assign="${t.id}">Attribuer</button>`:''}</td></tr>`).join('')}</tbody></table></div>`}
 async function workerMutation(change){const old=structuredClone(db);change();if(!await save()){db=old;return false}render();return true}
 function bindWorkers(){if(view!=='workers')return;
  $('#workerForm')?.addEventListener('submit',async e=>{e.preventDefault();const name=$('#workerName').value.trim(),rate=Number($('#workerRate').value);if(!name||!Number.isSafeInteger(rate)||rate<0||rate>1000000)return;await workerMutation(()=>db.workers.push({id:crypto.randomUUID(),name,rate,active:true}))});
  document.querySelectorAll('[data-worker-rate]').forEach(b=>b.onclick=async()=>{const w=db.workers.find(w=>w.id===b.dataset.workerRate);const input=prompt('Nouveau montant par voiture (F CFA). Les tickets déjà attribués conservent leur montant.',w.rate);if(input===null||!input.trim())return;const rate=Number(input);if(!Number.isSafeInteger(rate)||rate<0||rate>1000000){alert('Montant invalide.');return}await workerMutation(()=>w.rate=rate)});
  document.querySelectorAll('[data-worker-active]').forEach(b=>b.onclick=()=>workerMutation(()=>{const w=db.workers.find(w=>w.id===b.dataset.workerActive);w.active=!w.active}));
- document.querySelectorAll('[data-worker-assign]').forEach(b=>b.onclick=()=>{const t=db.tickets.find(t=>t.id===b.dataset.workerAssign);$('#detailBody').innerHTML=`<h2>Attribuer ${esc(t.plate)}</h2><label>Laveur<select id="assignWorker">${workerOptions()}</select></label><p class="hint">Le tarif actuel du laveur sera appliqué à cette voiture.</p><button id="confirmWorker" class="primary">Confirmer l’attribution</button>`;$('#assignWorker').value=t.workerId||'';$('#confirmWorker').onclick=async()=>{const w=db.workers.find(w=>w.id===$('#assignWorker').value&&w.active);if(!w){alert('Choisissez un laveur actif.');return}if(await workerMutation(()=>Object.assign(t,{workerId:w.id,worker:w.name,workerFee:w.rate})))$('#detail').close()};$('#detail').showModal()});
+ document.querySelectorAll('[data-worker-assign]').forEach(b=>b.onclick=()=>{
+  const id=b.dataset.workerAssign,t=db.tickets.find(t=>t.id===id);
+  const selected=db.workers.some(w=>w.id===t.workerId&&w.active)?t.workerId:'';
+  $('#detailBody').innerHTML=`<h2>Attribuer ${esc(t.plate)}</h2>${workerPickerHtml('assignWorker',selected)}<p class="hint">Le tarif actuel du laveur sera appliqué à cette voiture.</p><button id="confirmWorker" class="primary">Confirmer l’attribution</button>`;
+  bindWorkerPicker('assignWorker');
+  $('#confirmWorker').onclick=async()=>{
+   const w=db.workers.find(w=>w.id===$('#assignWorker').value&&w.active);
+   if(!w){alert('Choisissez un laveur actif.');return}
+   const current=db.tickets.find(t=>t.id===id);
+   if(!current||current.workerPaidAt)return;
+   if(await workerMutation(()=>Object.assign(current,{workerId:w.id,worker:w.name,workerFee:w.rate})))$('#detail').close();
+  };
+  $('#detail').showModal();
+ });
  document.querySelectorAll('[data-worker-pay]').forEach(b=>b.onclick=async()=>{const t=db.tickets.find(t=>t.id===b.dataset.workerPay);if(t.workerPaidAt||t.status!=='Terminé'||!(t.workerFee>0))return;const method=prompt('Moyen du paiement déjà effectué : Espèces, Wave ou Orange Money','Espèces');if(method===null)return;if(!['Espèces','Wave','Orange Money'].includes(method)){alert('Choisissez Espèces, Wave ou Orange Money.');return}if(!confirm(`Confirmer avoir payé ${money(t.workerFee)} F CFA à ${t.worker} pour ${t.plate} ?`))return;await workerMutation(()=>{t.workerPaidAt=Date.now();db.expenses.push({id:crypto.randomUUID(),date:day(t.workerPaidAt),category:'Salaires / primes',label:`Laveur ${t.worker} · ${t.plate}`,amount:t.workerFee,method,reference:t.id,workerTicketId:t.id,created:t.workerPaidAt,updated:t.workerPaidAt})})});
 }
 if(typeof module!=='undefined')module.exports={workerTotals};

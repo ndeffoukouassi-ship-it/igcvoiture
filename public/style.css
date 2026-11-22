@@ -45,3 +45,5 @@ nav button[data-view="admin"]{--button-top:#b88f34;--button-bottom:#80611f;--but
   main { padding-bottom:calc(116px + env(safe-area-inset-bottom)); }
   footer { padding-bottom:16px; }
 }
+
+.worker-picker{border:1px solid #d5e1d9;border-radius:10px;margin:18px 0;padding:12px;min-width:0}.worker-picker legend{font-size:14px;font-weight:600}.worker-choice{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px;border:1px solid #d5e1d9;border-radius:8px;cursor:pointer;margin:8px 0;background:#fff}.worker-choice:has(input:checked){border-color:#167354;background:#e3f5ea}.worker-choice input{width:20px;height:20px;margin:0;flex-shrink:0;accent-color:#167354}.worker-choice span{overflow-wrap:anywhere}.worker-picker button{margin-top:8px}
