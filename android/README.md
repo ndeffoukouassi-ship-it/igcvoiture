@@ -1,31 +1,21 @@
-# IGC AutoWash Android — APK de test
+# IGC AutoWash Android — candidat terrain 1.0.0-rc1
 
-Application Android hybride : gestion connectée sur `https://igc-autowash.onrender.com`, caméra CameraX et reconnaissance ML Kit intégrées. Le modèle Latin est inclus dans l’APK ; la lecture photo se fait sur le téléphone. Le numéro reconnu doit être confirmé avant d’être recopié dans le ticket.
+Version Android 8 et plus, identifiant stable `ci.igc.autowash`, versionCode 10001. L’APK release est signé séparément avec la clé pérenne d’IGC. Il s’installe à côté des anciennes versions `.test` et `.test2` ; se reconnecter avec le compte du centre pour retrouver les données en ligne.
 
-- Android 8 (API 26) et versions ultérieures.
-- Connexion Internet nécessaire pour les comptes, tickets, paiements enregistrés, dépenses et bilans.
-- Accès propriétaire et gérant distincts ; invitation depuis Mon centre.
-- Pas encore de notifications push ou de saisie différée hors connexion.
-- Pas de clé Supabase privilégiée embarquée.
-- Le pont natif accepte uniquement les messages du cadre principal et de l’origine AutoWash ; les liens externes s’ouvrent dans le navigateur.
-- Sélection photo et galerie pour les reçus ; export vers un emplacement choisi par l’utilisateur et partage Android.
+La caméra intégrée lit les plaques sur le téléphone et demande de confirmer le numéro. Internet reste nécessaire pour les comptes, tickets, données, reçus et bilans. Aucun paiement ni transfert d’argent n’est exécuté automatiquement.
 
-## Construire
+La barre Android affiche la version, Actualiser et Navigateur. Les confirmations, alertes et saisies de l’interface web sont prises en charge pour l’origine AutoWash uniquement. Les changements web arrivent après un déploiement Render et une actualisation ; les changements natifs demandent une nouvelle APK signée avec la même clé et un versionCode supérieur.
 
-JDK 17+, Android SDK 35, Build Tools 35.0.0 et Gradle 8.11.1.
+## Compilation et signature
 
-`gradle :app:assembleDebug :app:testDebugUnitTest`
+JDK 17+, SDK 35, Build Tools 35.0.0 et Gradle 8.11.1.
 
-Sortie : `app/build/outputs/apk/debug/app-debug.apk`.
+`gradle :app:assembleRelease :app:testReleaseUnitTest :app:lintRelease --no-daemon`
 
-Cet APK 0.2 de test utilise désormais l'identifiant distinct `ci.igc.autowash.test2` pour s'installer **à côté** de la version 0.1 `ci.igc.autowash.test`. Les sessions et données locales ne sont pas transférées entre les deux applications ; se reconnecter avec son compte AutoWash pour accéder aux données sauvegardées sur Supabase. Conserver l'ancienne application tant que le fonctionnement de la nouvelle n'est pas validé. Cette compilation utilise une clé de débogage et n'est pas destinée à Play Store ; une signature de production pérenne sera nécessaire pour les mises à jour futures.
+Sortie : `app/build/outputs/apk/release/app-release-unsigned.apk`. Aligner avec zipalign puis signer avec apksigner ; vérifier le certificat et la signature avant diffusion. La clé et son mot de passe restent hors du dépôt et des artefacts GitHub.
 
-## Navigation et actualisation (0.2.0-test)
+## Validation terrain avant commercialisation
 
-Sur téléphone, les sections de l'application restent accessibles dans une barre de navigation fixe en bas de l'écran : glisser horizontalement pour atteindre les autres rubriques. Le bouton Retour Android ferme d'abord un dialogue ouvert, puis revient à la vue d'ensemble avant de quitter l'application.
+Tester sur les téléphones pilotes : installation, connexion propriétaire/gérant, caméra autorisée/refusée, saisie et confirmation de plaque, choix d’un laveur, ticket et encaissement, lavage terminé et rémunération, annulation de confirmation, dépense avec reçu, export, partage, fidélité, Actualiser, Navigateur et Retour Android. Tester une coupure Internet : aucune sauvegarde ne doit être présentée comme réussie. Vérifier ensuite les données depuis un autre appareil.
 
-L'interface est hébergée sur Render : les changements web apparaissent après son déploiement et un appui sur « Actualiser ». Le numéro de version Android passe de 1 à 2 pour une nouvelle compilation. La clé de signature du nouvel APK doit correspondre à celle de l'application déjà installée pour permettre la mise à jour sans désinstallation.
-
-## Vérification
-
-Tests unitaires du traitement de plaque et compilation. Les essais physiques (autorisation caméra, autofocus, lisibilité, retour au ticket, reçus et export) doivent être réalisés sur les appareils pilotes, notamment le Samsung S22 Ultra.
+La compilation, les tests unitaires et l’analyse Android ne remplacent pas les essais physiques. Ce candidat reste à valider sur le terrain avant commercialisation.

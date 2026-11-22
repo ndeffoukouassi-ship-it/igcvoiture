@@ -2,6 +2,7 @@ package ci.igc.autowash;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -37,7 +38,7 @@ public class MainActivity extends ComponentActivity {
  void toast(String message){Toast.makeText(this,message,Toast.LENGTH_LONG).show();}
  @Override public void onCreate(Bundle state){super.onCreate(state);
   LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(Color.parseColor("#073C2E"));
-  LinearLayout bar=new LinearLayout(this);bar.setPadding(12,8,12,8);TextView title=new TextView(this);title.setText("IGC AutoWash");title.setTextColor(Color.parseColor("#E8CC7A"));title.setTextSize(20);bar.addView(title,new LinearLayout.LayoutParams(0,-2,1));Button refresh=new Button(this);refresh.setText("Actualiser");bar.addView(refresh);root.addView(bar);
+  LinearLayout bar=new LinearLayout(this);bar.setPadding(12,8,12,8);TextView title=new TextView(this);title.setText("AutoWash · "+BuildConfig.VERSION_NAME);title.setTextColor(Color.parseColor("#E8CC7A"));title.setTextSize(20);bar.addView(title,new LinearLayout.LayoutParams(0,-2,1));Button refresh=new Button(this);refresh.setText("Actualiser");bar.addView(refresh);Button browser=new Button(this);browser.setText("Navigateur");bar.addView(browser);browser.setOnClickListener(v->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(ORIGIN+"/?android=browser")));}catch(Exception e){toast("Aucun navigateur disponible");}});root.addView(bar);
   web=new WebView(this);root.addView(web,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
   // Respect system insets on Android 15's edge-to-edge default.
   androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root,(view,insets)->{androidx.core.graphics.Insets s=insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());view.setPadding(s.left,s.top,s.right,s.bottom);return insets;});
@@ -50,7 +51,21 @@ public class MainActivity extends ComponentActivity {
   if(WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)){
    WebViewCompat.addWebMessageListener(web,"AutoWashNative",Collections.singleton(ORIGIN),(view,message,source,isMainFrame,reply)->{if(!isMainFrame||!ORIGIN.equals(origin(source.toString()))||!trusted())return;runOnUiThread(()->handleMessage(message.getData()));});
   }
-  web.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){if(!trusted())return false;if(chooser!=null)chooser.onReceiveValue(null);chooser=callback;if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED)openPicker(true);else cameraPermission.launch(Manifest.permission.CAMERA);return true;}});
+  web.setWebChromeClient(new WebChromeClient(){
+   @Override public boolean onJsAlert(WebView v,String url,String message,JsResult result){
+    if(!trusted()||!ORIGIN.equals(origin(url))){result.cancel();return true;}
+    new AlertDialog.Builder(MainActivity.this).setTitle("IGC AutoWash").setMessage(message).setPositiveButton("OK",(d,which)->result.confirm()).setOnCancelListener(d->result.cancel()).show();return true;
+   }
+   @Override public boolean onJsConfirm(WebView v,String url,String message,JsResult result){
+    if(!trusted()||!ORIGIN.equals(origin(url))){result.cancel();return true;}
+    new AlertDialog.Builder(MainActivity.this).setTitle("Confirmer").setMessage(message).setPositiveButton("Confirmer",(d,which)->result.confirm()).setNegativeButton("Annuler",(d,which)->result.cancel()).setOnCancelListener(d->result.cancel()).show();return true;
+   }
+   @Override public boolean onJsPrompt(WebView v,String url,String message,String defaultValue,JsPromptResult result){
+    if(!trusted()||!ORIGIN.equals(origin(url))){result.cancel();return true;}
+    EditText input=new EditText(MainActivity.this);input.setSingleLine(true);input.setText(defaultValue==null?"":defaultValue);input.selectAll();
+    new AlertDialog.Builder(MainActivity.this).setTitle("IGC AutoWash").setMessage(message).setView(input).setPositiveButton("Valider",(d,which)->result.confirm(input.getText().toString())).setNegativeButton("Annuler",(d,which)->result.cancel()).setOnCancelListener(d->result.cancel()).show();return true;
+   }
+   @Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){if(!trusted())return false;if(chooser!=null)chooser.onReceiveValue(null);chooser=callback;if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED)openPicker(true);else cameraPermission.launch(Manifest.permission.CAMERA);return true;}});
   web.setDownloadListener((url,agent,disposition,mime,length)->{if(!trusted())return;if(url.startsWith("blob:"+ORIGIN)){web.evaluateJavascript("fetch("+JSONObject.quote(url)+").then(r=>r.blob()).then(b=>{if(b.size>15000000)throw Error();const r=new FileReader();r.onload=()=>AutoWashNative.postMessage(JSON.stringify({action:'download',data:r.result,mime:b.type}));r.readAsDataURL(b)})",null);}else toast("Utilisez le partage du reçu ou ouvrez le site dans Chrome pour ce fichier.");});
   refresh.setOnClickListener(v->web.loadUrl(ORIGIN+"/?android=1"));
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){
