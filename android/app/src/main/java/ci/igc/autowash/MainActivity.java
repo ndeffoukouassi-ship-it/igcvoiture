@@ -38,6 +38,7 @@ public class MainActivity extends ComponentActivity {
  @Override public void onCreate(Bundle state){super.onCreate(state);
   LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(Color.parseColor("#073C2E"));
   LinearLayout bar=new LinearLayout(this);bar.setPadding(12,8,12,8);TextView title=new TextView(this);title.setText("IGC AutoWash");title.setTextColor(Color.parseColor("#E8CC7A"));title.setTextSize(20);bar.addView(title,new LinearLayout.LayoutParams(0,-2,1));Button refresh=new Button(this);refresh.setText("Actualiser");bar.addView(refresh);root.addView(bar);
+  LinearLayout navigation=new LinearLayout(this);android.widget.HorizontalScrollView navigationScroll=new android.widget.HorizontalScrollView(this);navigationScroll.addView(navigation);root.addView(navigationScroll);Button home=new Button(this);home.setText("Accueil");navigation.addView(home);Button back=new Button(this);back.setText("Retour");navigation.addView(back);Button browser=new Button(this);browser.setText("Navigateur");navigation.addView(browser);
   web=new WebView(this);root.addView(web,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
   // Respect system insets on Android 15's edge-to-edge default.
   androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root,(view,insets)->{androidx.core.graphics.Insets s=insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());view.setPadding(s.left,s.top,s.right,s.bottom);return insets;});
@@ -52,6 +53,9 @@ public class MainActivity extends ComponentActivity {
   }
   web.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){if(!trusted())return false;if(chooser!=null)chooser.onReceiveValue(null);chooser=callback;if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED)openPicker(true);else cameraPermission.launch(Manifest.permission.CAMERA);return true;}});
   web.setDownloadListener((url,agent,disposition,mime,length)->{if(!trusted())return;if(url.startsWith("blob:"+ORIGIN)){web.evaluateJavascript("fetch("+JSONObject.quote(url)+").then(r=>r.blob()).then(b=>{if(b.size>15000000)throw Error();const r=new FileReader();r.onload=()=>AutoWashNative.postMessage(JSON.stringify({action:'download',data:r.result,mime:b.type}));r.readAsDataURL(b)})",null);}else toast("Utilisez le partage du reçu ou ouvrez le site dans Chrome pour ce fichier.");});
+  home.setOnClickListener(v->{if(trusted())web.evaluateJavascript("(()=>{document.querySelectorAll('dialog[open]').forEach(d=>d.close());document.querySelector('nav button[data-view=dashboard]')?.click()})()",null);else web.loadUrl(ORIGIN+"/?android=1");});
+  back.setOnClickListener(v->getOnBackPressedDispatcher().onBackPressed());
+  browser.setOnClickListener(v->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(ORIGIN)));}catch(Exception e){toast("Navigateur indisponible");}});
   refresh.setOnClickListener(v->web.loadUrl(ORIGIN+"/?android=1"));
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){
    if(!trusted()){if(web.canGoBack())web.goBack();else finish();return;}
