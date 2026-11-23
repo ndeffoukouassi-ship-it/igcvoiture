@@ -29,7 +29,7 @@ begin
  if auth.uid() is null then raise exception 'AUTH_REQUIRED' using errcode='42501'; end if;
  update public.autowash_centres set state=next_state, revision=revision+1, updated_at=now()
  where owner_id=auth.uid() and revision=expected_revision returning revision into new_revision;
- if new_revision is null then raise exception 'CONCURRENT_EDIT' using errcode='40001'; end if;
+ if new_revision is null then raise exception 'CONCURRENT_EDIT' using errcode='PT409'; end if;
  return new_revision;
 end $$;
 revoke all on function public.autowash_save(bigint,jsonb) from public,anon;

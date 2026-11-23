@@ -52,7 +52,7 @@ declare actor uuid:=auth.uid(); previous jsonb; revision_now bigint; result bigi
 begin
  if actor is null or not autowash_private.has_centre_access(centre_id::text) then raise exception 'ACCESS_REVOKED' using errcode='42501';end if;
  select state,revision into previous,revision_now from public.autowash_centres where owner_id=centre_id for update;
- if revision_now<>expected_revision then raise exception 'CONCURRENT_EDIT' using errcode='40001';end if;
+ if revision_now<>expected_revision then raise exception 'CONCURRENT_EDIT' using errcode='PT409';end if;
  payload:=next_state;
  if actor<>centre_id then
  if next_state->'center' is distinct from previous->'center' or next_state->'services' is distinct from previous->'services' or next_state->'loyaltyEnabled' is distinct from previous->'loyaltyEnabled' then raise exception 'OWNER_SETTINGS_ONLY' using errcode='42501';end if;
