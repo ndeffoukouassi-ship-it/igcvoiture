@@ -23,7 +23,7 @@ do $$ declare n int; r bigint; begin
  begin
  perform public.autowash_save(0,state) from public.autowash_centres;
  raise exception 'FAIL concurrent edit';
- exception when serialization_failure then null;
+ exception when sqlstate 'PT409' then null;
  end;
  insert into storage.objects(bucket_id,name) values('autowash-receipts','10000000-0000-4000-8000-000000000001/test.jpg');
  begin
